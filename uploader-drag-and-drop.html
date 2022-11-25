@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Uploader con ajax</title>
+  <title>Uploader Drag && Drop con ajax</title>
   <style>
     html {
       box-sizing: border-box;
@@ -31,19 +31,52 @@
     progress {
       margin-top: 1rem;
     }
+
+    .drop-zone {
+      margin-left: auto;
+      margin-right: auto;
+      border: thin dotted #000;
+      width: 80%;
+      height: 40vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .drop-zone.is-active {
+      border: thick dashed #000;
+      background-color: rgba(0, 128, 0, 0.5);
+      animation: pulse 1.5s infinite;
+      animation-timing-function: linear;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.1)
+      }
+    }
   </style>
 </head>
 
 <body>
 
   <main>
-    <input type="file" id="files" name="files" multiple>
+    <article class="drop-zone ">
+      <p>Arrastra y suelta tus archivos...</p>
+    </article>
   </main>
 
   <script>
 
     const $main = document.querySelector("main"),
-      $files = document.getElementById("files")
+      $dropZone = document.querySelector(".drop-zone");
     // funcion para subir archivos a nuestro servidor hecho con php mediante ajax
     const uploader = (file) => {
       const xhr = new XMLHttpRequest(),
@@ -105,21 +138,34 @@
         setTimeout(() => {
           $main.removeChild($progress);
           $main.removeChild($span);
-          $files.value = "";
+
         }, 3000)
       })
     }
+    // no hacemos delegacion de eventos porque el unico elemento que va a ser zona de interaccion activa es la dropzone.
+    //es el evento que se ejecuta cuando yo tenga un archivo sobre la zona dropZone
+    $dropZone.addEventListener("dragover", e => {
+      // console.log(e)
+      e.preventDefault()
+      //evitamos la propagacion del evento 
+      e.stopPropagation()
+      e.target.classList.add("is-active")
 
-    document.addEventListener("change", e => {
-      if (e.target === $files) {
-        console.log(e.target.files)
-        // Array.from da la capacidad de utilizar metodos de array a los objetos.
-        const files = Array.from(e.target.files)
-        files.forEach(el => progressUpload(el))
-      }
     })
+    //es el evento que se ejecuta cuando yo tenga un archivo fuera de la zona dropZon
+    $dropZone.addEventListener("dragleave", e => {
+      e.preventDefault()
+      e.stopPropagation()
+      e.target.classList.remove("is-active")
 
-
+    })
+    $dropZone.addEventListener("drop", e => {
+      e.preventDefault()
+      e.stopPropagation()
+      const files = Array.from(e.dataTransfer.files)
+      files.forEach(el => progressUpload(el))
+      e.target.classList.remove("is-active")
+    })
   </script>
 </body>
 
